@@ -17,7 +17,7 @@ $.fn.autoFill = function(opts){
                 '<div class="autoFill-valTipCo '+ (status_isTextarea ? 't-textarea' : 't-inputtxt') +'"><\/div>',
             '</span>'    
         ].join('')).insertAfter($t).find('> .autoFill-valTipCo'),
-        elms_valTip = $('<div class="autoFill-valTip"></div>').appendTo($body),
+        elms_valTip = $('<pre class="autoFill-valTip"></pre>').appendTo($body),
         data_typeTxt = '',
         data_typeContent = [],
         data_typeKeyMap = {},
@@ -26,16 +26,22 @@ $.fn.autoFill = function(opts){
         data_txtLen = 0,
         data_oldSearchCo = '',
         data_newSearchCo = '',
+        data_afterVal = opts.afterVal || '',
         data_markKey = opts.markKey || ';',
+        data_defaultData = opts.defaultData,
+        status_hasDefaultData = opts.defaultData ? true : false,
         status_searchingTxt = false,
         status_hadValTipShow = false,
         status_canElementResize = opts.canResize || false,
         status_isOnKeyDown = false;
-        
+    
+    if (status_isInputTxt) {
+        var elms_getSize = $('<span class="autoFill-valTipSize"></span>').appendTo(elms_valBox.parents('.autoFill-valBox'));
+    }    
     
     !$t.hasClass('autoFill_typeBox') && $t.addClass('autoFill_typeBox'); 
     $t.attr('data-autoFillHadInit', 'true');
-    var styleArr = ['height', 'width', 'padding', 'border', 'font', 'font-size', 'font-weight', 'line-height'],
+    var styleArr = ['text-indent', 'text-align', 'height', 'width', 'padding', 'border', 'font', 'font-family', 'font-size', 'font-weight', 'line-height', 'word-wrap', 'word-break', 'white-space', 'word-spacing', 'letter-spacing'],
         i = 0,
         ni = styleArr.length;
     /*
@@ -46,7 +52,33 @@ $.fn.autoFill = function(opts){
         elms_valBox.css(_, $t.css(_));
     }
     function methods_replaceHtmlCode(str) {
-        return str.replace(/\<s/gi, '%s').replace(/\<\/s/gi, '%/s').replace(/\t>/gi, 't%').replace(/\n/g, '<br>').replace(/\s/g, '&nbsp;');
+        return str.replace(/\<s/gi, '%s').replace(/\<\/s/gi, '%/s').replace(/\t>/gi, 't%');
+    }
+    function methods_searchDefaultdata(searchCo, data_oldCurPos, sel_e) {
+        var arr = [];
+        for (i = 0, ni = data_defaultData.length; i < ni; i++) {
+            if (RegExp(searchCo).test(data_defaultData[i])) {
+                arr.push(data_defaultData[i]);
+            }
+        }
+        if (arr.length >= 1) {
+            var newData = opts.rulels ? opts.rules(arr) : arr;
+            methods_createValTipContent(newData, data_oldCurPos, sel_e);
+        } else {
+            methods_hideValTip();
+        }
+    }
+    function methods_searchOutData(searchCo, data_oldCurPos, sel_e) {
+        opts.searchFunc && opts.searchFunc({
+            txt : searchCo,
+            success : function(data) {
+                var newData = opts.rulels ? opts.rules(data) : data;
+                methods_createValTipContent(newData, data_oldCurPos, sel_e);
+            },
+            error : function() {
+                methods_hideValTip();
+            }
+        });
     }
     function methods_hideValTip() {
         data_oldCurPos = 0;
@@ -59,14 +91,14 @@ $.fn.autoFill = function(opts){
         var val = $t.val(),
             s0 = methods_replaceHtmlCode(val.slice(0, pos_s)),
             s1 = val.slice(pos_s, pos_e),
-            tScrollTop = t.scrollTop;
+            tScrollTop = t.scrollTop,
+            tScrollLeft = t.scrollLeft;
         elms_valBox.html(s0 + '<a href="javascript:void(0)">'+ s1 +'</a>');
         var a = elms_valBox.find('a'),
             a0 = a[0],
             a0_t = a0.offsetTop,
-            valBox = elms_valBox[0],
-            valBox_h = elms_valBox.height();
-        return [a0.offsetLeft - valBox.scrollLeft, a0_t - tScrollTop, a.height()];
+            a0_l = a0.offsetLeft;
+        return [a0_l - tScrollLeft, a0_t - tScrollTop, a.height()];
     }
     function methods_focusElmOfValTip(dir) {
         elms_valTip.find('li[class=selected]').removeClass('selected');
@@ -141,16 +173,7 @@ $.fn.autoFill = function(opts){
                 status_hadValTipShow = false;
                 data_oldSearchCo = data_newSearchCo;
                 if (data_newSearchCo !== '') {
-                    opts.searchFunc({
-                        txt : data_newSearchCo,
-                        success : function(data) {
-                            var newData = opts.rulels ? opts.rules(data) : data;
-                            methods_createValTipContent(newData, data_oldCurPos, sel.e);
-                        },
-                        error : function() {
-                            methods_hideValTip();
-                        }
-                    });
+                    status_hasDefaultData ? methods_searchDefaultdata(data_newSearchCo, data_oldCurPos, sel.e) : methods_searchOutData(data_newSearchCo, data_oldCurPos, sel.e);
                 }
             } else {
                 elms_valTip.hide().html('');
@@ -182,11 +205,15 @@ $.fn.autoFill = function(opts){
             }
             if ((13 === k || 8 === k) && status_hadValTipShow) {
                 if (data_txtIdx !== -1 && data_txtIdx !== data_txtLen) {
-                    var tVal = elms_valTip.find('li').eq(data_txtIdx).attr('title'),
+                    var tVal = elms_valTip.find('li').eq(data_txtIdx).attr('title') + data_afterVal,
                         tLen = tVal.length,
                         newCurPos = data_oldCurPos + tLen;
                     $t.val(val.slice(0, data_oldCurPos) + tVal + val.slice($t.getSelectionPos().e, val.length));
                     $t.setSelectionPos(newCurPos, newCurPos);
+                    if (status_isInputTxt) {
+                        elms_getSize.html(tVal);
+                        t.scrollLeft += elms_getSize.width();
+                    }
                     methods_hideValTip();    
                     return false;
                 }
@@ -202,11 +229,15 @@ $.fn.autoFill = function(opts){
             $target = $(target);
         if (target && target.nodeName === 'LI' && $target.parents('.autoFill-valTip')[0]) {
             var val = $t.val(),
-                tVal = $target.attr('title'),
+                tVal = $target.attr('title') + data_afterVal,
                 tLen = tVal.length,
                 newCurPos = data_oldCurPos + tLen;
             $t.val(val.slice(0, data_oldCurPos) + tVal + val.slice($t.getSelectionPos().e, val.length));
             $t.setSelectionPos(newCurPos, newCurPos);
+            if (status_isInputTxt) {
+                elms_getSize.html(tVal);
+                t.scrollLeft += elms_getSize.width();
+            }
         }
         methods_hideValTip();
     }
@@ -264,4 +295,4 @@ $.fn.getSelectionPos = function(){
     }
     var c = t.value.substring(s, e);
     return {s: s, e: e, c: c};
-};   
+};    

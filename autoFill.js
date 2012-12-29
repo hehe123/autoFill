@@ -1,3 +1,9 @@
+/*
+ * autor : Jerrod Zhou (hehe123)
+ * qq : 241728923
+ * mail : mag.zhoujie@gmail.com
+ * 
+ */
 $.fn.autoFill = function(opts){
     var $t = this,
         t = $t[0];
@@ -18,6 +24,7 @@ $.fn.autoFill = function(opts){
             '</span>'    
         ].join('')).insertAfter($t).find('> .autoFill-valTipCo'),
         elms_valTip = $('<pre class="autoFill-valTip"></pre>').appendTo($body),
+        elms_getSize = null,
         data_typeTxt = '',
         data_typeContent = [],
         data_typeKeyMap = {},
@@ -36,7 +43,7 @@ $.fn.autoFill = function(opts){
         status_isOnKeyDown = false;
     
     if (status_isInputTxt) {
-        var elms_getSize = $('<span class="autoFill-valTipSize"></span>').appendTo(elms_valBox.parents('.autoFill-valBox'));
+        elms_getSize = $('<span class="autoFill-valTipSize"></span>').appendTo(elms_valBox.parents('.autoFill-valBox'));
     }    
     
     !$t.hasClass('autoFill_typeBox') && $t.addClass('autoFill_typeBox'); 

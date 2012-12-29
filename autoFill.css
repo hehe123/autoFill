@@ -1,0 +1,9 @@
+.autoFill_typeBox{overflow:hidden;}
+.autoFill-valBox{width:1px;height:1px;overflow:hidden;position:relative;display:inline-block;}
+.autoFill-valBox > .t-textarea{*word-break:break-all;word-wrap:break-word;}
+.autoFill-valBox > .t-inputtxt{*word-break:keep-all;word-wrap:normal;}
+.autoFill-valBox > .autoFill-valTipCo{overflow:hidden;position:relative;}
+.autoFill-valTip{overflow:hidden;position:absolute;width:120px;border-top:1px #dddddd solid;border-bottom:1px #dddddd solid;background:#fff;text-align:left;}
+.autoFill-valTip ul, .autoFill-valTip ul li{list-style:none outside;margin:0;padding:0;}
+.autoFill-valTip ul li{cursor:pointer;clear:both;overflow:hidden;text-align:left;padding:5px 0 5px 5px;border-left:1px #dddddd solid;border-right:1px #dddddd solid;font-size:12px;width:113px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.autoFill-valTip ul li:hover, .autoFill-valTip ul li.selected{border:0;background: #15addd;color:#fff;width:114px;padding-left:6px;}
